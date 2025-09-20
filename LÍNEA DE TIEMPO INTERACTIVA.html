@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Línea de Tiempo Interactiva - Discriminación Étnica en Perú</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            overflow-x: auto;
+        }
+
+        .header {
+            text-align: center;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            color: #666;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .timeline-container {
+            position: relative;
+            max-width: 1200px;
+            margin: 3rem auto;
+            padding: 0 2rem;
+        }
+
+        .timeline-line {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(to bottom, #667eea, #764ba2);
+            transform: translateX(-50%);
+            border-radius: 2px;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .timeline-event {
+            position: relative;
+            margin: 4rem 0;
+            opacity: 0;
+            transform: translateY(50px);
+            animation: fadeInUp 0.8s ease forwards;
+        }
+
+        .timeline-event:nth-child(even) {
+            animation-delay: 0.2s;
+        }
+
+        .timeline-event:nth-child(odd) {
+            animation-delay: 0.1s;
+        }
+
+        .event-content {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 0 2rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            width: calc(50% - 4rem);
+        }
+
+        .timeline-event:nth-child(even) .event-content {
+            margin-left: calc(50% + 2rem);
+        }
+
+        .timeline-event:nth-child(odd) .event-content {
+            margin-right: calc(50% + 2rem);
+        }
+
+        .event-content:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        }
+
+        .event-dot {
+            position: absolute;
+            left: 50%;
+            top: 2rem;
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border-radius: 50%;
+            transform: translateX(-50%);
+            border: 4px solid white;
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
+            z-index: 10;
+            transition: all 0.3s ease;
+        }
+
+        .timeline-event:hover .event-dot {
+            transform: translateX(-50%) scale(1.3);
+            box-shadow: 0 0 30px rgba(102, 126, 234, 0.8);
+        }
+
+        .event-date {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .event-date::before {
+            content: "📅";
+            font-size: 1.2rem;
+        }
+
+        .event-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 1rem;
+            line-height: 1.3;
+        }
+
+        .event-section {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: rgba(102, 126, 234, 0.05);
+            border-left: 4px solid #667eea;
+            border-radius: 8px;
+        }
+
+        .event-section h4 {
+            color: #667eea;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .event-section p {
+            line-height: 1.6;
+            color: #555;
+        }
+
+        .sources-section {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: rgba(118, 75, 162, 0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(118, 75, 162, 0.2);
+        }
+
+        .sources-section h4 {
+            color: #764ba2;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .sources-section h4::before {
+            content: "📚";
+        }
+
+        .sources-list {
+            list-style: none;
+        }
+
+        .sources-list li {
+            margin: 0.5rem 0;
+            padding-left: 1rem;
+            position: relative;
+        }
+
+        .sources-list li::before {
+            content: "•";
+            color: #764ba2;
+            position: absolute;
+            left: 0;
+        }
+
+        .sources-list a {
+            color: #667eea;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .sources-list a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        .video-section {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .video-section h4 {
+            color: #667eea;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .video-section h4::before {
+            content: "🎥";
+        }
+
+        .video-link {
+            display: inline-block;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            margin-top: 0.5rem;
+        }
+
+        .resource-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .resource-item {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            padding: 0.8rem;
+            border-radius: 8px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .resource-item:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2));
+        }
+
+        .visual-tips {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 8px;
+            font-size: 0.9em;
+            border-left: 4px solid #f39c12;
+        }
+
+        .visual-tips strong {
+            color: #f39c12;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .toggle-details {
+            display: none;
+            margin-top: 1rem;
+            animation: slideDown 0.5s ease;
+        }
+
+        .show-details .toggle-details {
+            display: block;
+        }
+
+        .expand-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .expand-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .summary-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 4rem 2rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .summary-section h2 {
+            color: #667eea;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .summary-points {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .summary-point {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            padding: 1.5rem;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .summary-point h3 {
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                max-height: 0;
+            }
+            to {
+                opacity: 1;
+                max-height: 500px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .timeline-line {
+                left: 2rem;
+            }
+
+            .event-dot {
+                left: 2rem;
+            }
+
+            .event-content {
+                width: calc(100% - 6rem);
+                margin-left: 4rem !important;
+                margin-right: 2rem !important;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .timeline-container {
+                padding: 0 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Línea de Tiempo Interactiva</h1>
+        <p>Discriminación étnica y cultural en el Perú: Análisis histórico y reflexiones contemporáneas</p>
+    </div>
+
+    <div class="timeline-container">
+        <div class="timeline-line"></div>
+
+        <!-- Evento 1: Conquista española -->
+        <div class="timeline-event">
+            <div class="event-dot"></div>
+            <div class="event-content">
+                <div class="event-date">1532 - finales siglo XVI</div>
+                <div class="event-title">La Conquista, la encomienda y la mita: desposesión, reconfiguración social y origen estructural de exclusiones</div>
+                
+                <div class="event-section">
+                    <h4>Contexto</h4>
+                    <p>La llegada de los conquistadores activó un proceso de reorganización que transformó la demografía, organización laboral y territorialidad indígena. El colapso demográfico extremo por guerras, trabajos forzados y enfermedades reorientó la capacidad productiva hacia el extractivismo colonial.</p>
+                </div>
+
+                <button class="expand-btn" onclick="toggleDetails(this)">Ver más detalles</button>
+                
+                <div class="toggle-details">
+                    <div class="event-section">
+                        <h4>¿Qué hubiera cambiado con políticas actuales?</h4>
+                        <p>Reconocimiento de principios de autodeterminación, protección territorial y mecanismos de consulta/consentimiento habrían reducido las expropiaciones arbitrarias y la imposición cultural violenta.</p>
+                    </div>
+
+                    <div class="event-section">
+                        <h4>Reflexión crítica</h4>
+                        <p>La conquista creó una "zonificación de ciudadanía" donde las formas locales de conocimiento y gobernanza perdieron validez. Esta distribución estructurada del poder alimenta la desigualdad étnica que las políticas contemporáneas deben revertir.</p>
+                    </div>
+
+                    <div class="sources-section">
+                        <h4>Fuentes clave</h4>
+                        <ul class="sources-list">
+                            <li><a href="https://scholar.harvard.edu/files/dell/files/ecta8121_0.pdf" target="_blank">Dell, M. - Efectos de largo plazo de la mita</a></li>
+                            <li><a href="https://www.thebritishacademy.ac.uk/documents/4002/81p247.pdf" target="_blank">Revisiones demográficas sobre colapso colonial</a></li>
+                            <li><a href="https://www.mnaahp.gob.pe/" target="_blank">Museo Nacional de Arqueología - Sala Conquista y Colonia</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="video-section">
+                        <h4>Videos y recursos visuales recomendados</h4>
+                        <div style="display: grid; gap: 0.5rem; margin-top: 1rem;">
+                            <a href="https://www.youtube.com/channel/UCpkOuGCHcwSVKfvl_H8HKyA" target="_blank" class="video-link">🎥 Hatun Studios - Historia del Perú</a>
+                            <a href="https://www.youtube.com/results?search_query=mita+colonial+peru+documental" target="_blank" class="video-link">📚 Documentales sobre la Mita</a>
+                            <a href="https://www.youtube.com/results?search_query=encomienda+colonial+peru" target="_blank" class="video-link">🏛️ Sistema de Encomienda</a>
+                        </div>
+                        <div class="visual-tips">
+                            <strong>💡 Imágenes clave a buscar:</strong><br>
+                            • "Los trece del Gallo" de Lepiani<br>
+                            • Mapas del Tahuantinsuyo<br>
+                            • Infografías sobre colapso demográfico<br>
+                            • Pinturas coloniales del MNAAHP
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Evento 2: Racismo republicano -->
+        <div class="timeline-event">
+            <div class="event-dot"></div>
+            <div class="event-content">
+                <div class="event-date">Siglo XIX - principios XX</div>
+                <div class="event-title">Racismo republicano: el mito del mestizaje como máscara de jerarquías</div>
+                
+                <div class="event-section">
+                    <h4>Contexto</h4>
+                    <p>Las élites republicanas construyeron proyectos nacionales que favorecieron un ideal cultural europeoizado. Creció un discurso científico-cultural que justificó jerarquías raciales y promovió el blanqueamiento social como estrategia de ascenso.</p>
+                </div>
+
+                <button class="expand-btn" onclick="toggleDetails(this)">Ver más detalles</button>
+                
+                <div class="toggle-details">
+                    <div class="event-section">
+                        <h4>Consecuencias duraderas</h4>
+                        <p>Tres marcas perdurables: (1) institucionalización simbólica de privilegios culturales, (2) exclusión socioeconómica reproducida por educación y empleo, (3) normalización del estigma hacia prácticas y saberes indígenas.</p>
+                    </div>
+
+                    <div class="event-section">
+                        <h4>Reflexión crítica</h4>
+                        <p>El racismo republicano fue política pública, no solo prejuicio privado. La lucha contra la discriminación necesita medidas de Estado que actúen sobre narrativas oficiales: reformular currículos y normalizar lenguas originarias.</p>
+                    </div>
+
+                    <div class="sources-section">
+                        <h4>Fuentes clave</h4>
+                        <ul class="sources-list">
+                            <li><a href="https://centroderecursos.cultura.pe/sites/default/files/rb/pdf/el-racismo-peruano.pdf" target="_blank">Callirgos & Oboler - El racismo peruano</a></li>
+                            <li><a href="https://repositorio.cultura.gob.pe/" target="_blank">Ministerio de Cultura - Recursos sobre racismo</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="video-section">
+                        <h4>Videos y recursos visuales recomendados</h4>
+                        <div style="display: grid; gap: 0.5rem; margin-top: 1rem;">
+                            <a href="https://www.youtube.com/results?search_query=racismo+republicano+peru+siglo+XIX" target="_blank" class="video-link">🎭 Racismo Republicano Perú</a>
+                            <a href="https://www.youtube.com/results?search_query=mestizaje+peru+documentales+ministerio+cultura" target="_blank" class="video-link">🏛️ Ministerio de Cultura - Mestizaje</a>
+                            <a href="https://www.youtube.com/results?search_query=patria+nueva+leguia+peru+1919" target="_blank" class="video-link">📜 Patria Nueva y Racismo Científico</a>
+                        </div>
+                        <div class="visual-tips">
+                            <strong>💡 Imágenes y temas clave a buscar:</strong><br>
+                            • Sistema de castas virreinato-republicano<br>
+                            • Fotografías de "blanqueamiento social"<br>
+                            • Carteles y propaganda de la "Patria Nueva"<br>
+                            • Documentos oficiales con clasificaciones raciales<br>
+                            • Arte y literatura indigenista vs. discurso oficial
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Evento 3: Conflicto armado -->
+        <div class="timeline-event">
+            <div class="event-dot"></div>
+            <div class="event-content">
+                <div class="event-date">1980 - 2000</div>
+                <div class="event-title">Conflicto armado interno: la violencia como catalizador de la invisibilización y exclusión</div>
+                
+                <div class="event-section">
+                    <h4>Contexto</h4>
+                    <p>La CVR estimó ~69,000 víctimas, donde la mayoría procedía de áreas rurales y hablaba lenguas indígenas (quechua). La violencia se dirigió desproporcionadamente contra colectivos ya marginados.</p>
+                </div>
+
+                <button class="expand-btn" onclick="toggleDetails(this)">Ver más detalles</button>
+                
+                <div class="toggle-details">
+                    <div class="event-section">
+                        <h4>Impactos y costos sociales</h4>
+                        <p>Pérdida de tejido social, desplazamientos intergeneracionales, desconfianza en el Estado, estigmatización de poblaciones rurales como "sospechosas" y débil restitución de derechos.</p>
+                    </div>
+
+                    <div class="event-section">
+                        <h4>Reflexión crítica</h4>
+                        <p>La violencia política se alimenta de desigualdad. Para una ciudadanía intercultural genuina hay que invertir en infraestructura de reconocimiento lingüística, jurídica y educativa.</p>
+                    </div>
+
+                    <div class="sources-section">
+                        <h4>Fuentes clave</h4>
+                        <ul class="sources-list">
+                            <li><a href="https://www.cverdad.org.pe/ifinal/" target="_blank">CVR - Informe Final (2003)</a></li>
+                            <li><a href="https://idehpucp.pucp.edu.pe/investigacion/comision-de-la-verdad/" target="_blank">IDEH PUCP - Archivo CVR</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="video-section">
+                        <h4>Videos y recursos visuales recomendados</h4>
+                        <div style="display: grid; gap: 0.5rem; margin-top: 1rem;">
+                            <a href="https://www.cverdad.org.pe/ifinal/" target="_blank" class="video-link">🎥 CVR - Testimonios y documentales</a>
+                            <a href="https://www.youtube.com/results?search_query=comision+verdad+reconciliacion+peru+testimonios" target="_blank" class="video-link">👥 Testimonios de víctimas CVR</a>
+                            <a href="https://www.youtube.com/results?search_query=sendero+luminoso+documental+peru+violencia" target="_blank" class="video-link">📺 Documentales sobre el conflicto</a>
+                            <a href="https://www.youtube.com/results?search_query=la+teta+asustada+magallanes+peru" target="_blank" class="video-link">🎭 "La Teta Asustada" - Memoria</a>
+                        </div>
+                        <div class="visual-tips">
+                            <strong>💡 Imágenes y recursos visuales clave:</strong><br>
+                            • Mapas de violencia por regiones (CVR)<br>
+                            • Fotografías de comunidades afectadas<br>
+                            • Memorial "El Ojo que Llora" (Lima)<br>
+                            • Testimonios audiovisuales de quechuahablantes<br>
+                            • Infografías sobre víctimas por origen étnico<br>
+                            • Lugares de memoria en Ayacucho y Huancavelica
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Evento 4: Esterilizaciones forzadas -->
+        <div class="timeline-event">
+            <div class="event-dot"></div>
+            <div class="event-content">
+                <div class="event-date">1996 - 2000</div>
+                <div class="event-title">Esterilizaciones forzadas: intersección de género, etnicidad y política pública</div>
+                
+                <div class="event-section">
+                    <h4>Contexto</h4>
+                    <p>Programa de planificación familiar que incluyó esterilizaciones masivas. Las víctimas se concentraron en mujeres rurales, indígenas y en pobreza. Estimaciones hablan de decenas a cientos de miles de personas afectadas.</p>
+                </div>
+
+                <button class="expand-btn" onclick="toggleDetails(this)">Ver más detalles</button>
+                
+                <div class="toggle-details">
+                    <div class="event-section">
+                        <h4>Consecuencias</h4>
+                        <p>Daño físico, trauma social y cultural, impedimentos para ejercer oficios tradicionales, ruptura de la reproducción cultural y profunda desconfianza hacia el sistema de salud pública.</p>
+                    </div>
+
+                    <div class="event-section">
+                        <h4>Reflexión crítica</h4>
+                        <p>Paradigmático para comprender la intersección entre políticas aparentemente neutrales y estructuras de discriminación. Los programas universales requieren diseño intercultural y supervisión participativa.</p>
+                    </div>
+
+                    <div class="sources-section">
+                        <h4>Fuentes clave</h4>
+                        <ul class="sources-list">
+                            <li><a href="https://www.ohchr.org/en/press-releases/2024/10/peru-fujimori-governments-forced-sterilisation-policy-violated-womens-rights" target="_blank">OHCHR (2024) - Violación de derechos de mujeres</a></li>
+                            <li><a href="https://www.theguardian.com/global-development/2025/may/22/case-celia-ramos-mother-died-forced-sterilisation-peru-heard-human-rights-court" target="_blank">The Guardian - Caso Celia Ramos</a></li>
+                            <li><a href="https://reproductiverights.org/case/celia-ramos-forced-sterilization-peru/" target="_blank">Center for Reproductive Rights - Casos legales</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="video-section">
+                        <h4>Videos y recursos visuales recomendados</h4>
+                        <div style="display: grid; gap: 0.5rem; margin-top: 1rem;">
+                            <a href="https://www.ohchr.org/en/stories/2019/06/forced-sterilisations-peru-one-womans-fight-justice-and-redress" target="_blank" class="video-link">🎥 OHCHR - La lucha por justicia</a>
+                            <a href="https://www.youtube.com/results?search_query=esterilizaciones+forzadas+peru+fujimori+documental" target="_blank" class="video-link">📺 Documentales sobre esterilizaciones</a>
+                            <a href="https://www.youtube.com/results?search_query=celia+ramos+esterilizacion+peru+testimonio" target="_blank" class="video-link">👩 Testimonio Celia Ramos</a>
+                            <a href="https://www.youtube.com/results?search_query=mujeres+indigenas+peru+derechos+reproductivos" target="_blank" class="video-link">⚖️ Derechos reproductivos indígenas</a>
+                        </div>
+                        <div class="visual-tips">
+                            <strong>💡 Imágenes y recursos visuales clave:</strong><br>
+                            • Fotografías de campañas de "planificación familiar"<br>
+                            • Mapas de regiones más afectadas (Andes y Amazonía)<br>
+                            • Testimonios de sobrevivientes en video<br>
+                            • Documentos oficiales del programa AQV<br>
+                            • Infografías sobre intersección género-etnicidad<br>
+                            • Imágenes de protestas y marchas por justicia<br>
+                            • Material de organizaciones de mujeres indígenas
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Evento 5: Bagua -->
+        <div class="timeline-event">
+            <div class="event-dot"></div>
+            <div class="event-content">
+                <div class="event-date">29 mayo - 5 junio 2009</div>
+                <div class="event-title">Bagua (El Baguazo): consulta, territorio y violencia estatal</div>
+                
+                <div class="event-section">
+                    <h4>Contexto</h4>
+                    <p>Decretos que flexibilizaban autorizaciones extractivas generaron protestas amazónicas. Las comunidades Awajún y Wampís percibieron violación de su derecho a consulta territorial. Los enfrentamientos dejaron decenas de muertos.</p>
+                </div>
+
+                <button class="expand-btn" onclick="toggleDetails(this)">Ver más detalles</button>
+                
+                <div class="toggle-details">
+                    <div class="event-section">
+                        <h4>Impactos y lecciones</h4>
+                        <p>Mostró que la ausencia de participación real conlleva criminalización de liderazgos y militarización de conflictos que deberían resolverse democráticamente. El costo fue pérdida de vidas y erosión de confianza.</p>
+                    </div>
+
+                    <div class="event-section">
+                        <h4>Reflexión crítica</h4>
+                        <p>Subraya que la ciudadanía intercultural requiere instituciones capaces de implementar derechos con imparcialidad, presupuesto y personal formado interculturalmente. Sin esas capacidades, las normas quedan en papel.</p>
+                    </div>
+
+                    <div class="sources-section">
+                        <h4>Fuentes clave</h4>
+                        <ul class="sources-list">
+                            <li><a href="https://www.defensoria.gob.pe/modules/Downloads/documentos/INFORME-ACTUACIONES-BAGUA.pdf" target="_blank">Defensoría del Pueblo - Informe Bagua</a></li>
+                            <li><a href="https://www.fidh.org/IMG/pdf/amer/pe529e.pdf" target="_blank">FIDH - Análisis de política extractiva</a></li>
+                            <li><a href="https://iwgia.org/en/peru.html" target="_blank">IWGIA - Derechos pueblos indígenas</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="video-section">
+                        <h4>Videos y recursos visuales recomendados</h4>
+                        <div style="display: grid; gap: 0.5rem; margin-top: 1rem;">
+                            <a href="https://cisepa.pucp.edu.pe/novedades-y-eventos/novedades/bagua-2009-a-2025-hito-historico-en-la-memoria-nacional-y-desafios-que-persisten/" target="_blank" class="video-link">🎥 Documental "La Espera"</a>
+                            <a href="https://www.youtube.com/results?search_query=bagua+2009+awajun+wampis+protesta+amazonia" target="_blank" class="video-link">📺 Bagua 2009 - Crónicas</a>
+                            <a href="https://www.youtube.com/results?search_query=alberto+pizango+bagua+lider+indigena" target="_blank" class="video-link">👤 Alberto Pizango - Testimonio</a>
+                            <a href="https://www.youtube.com/results?search_query=consulta+previa+pueblos+indigenas+peru" target="_blank" class="video-link">⚖️ Consulta previa en Perú</a>
+                            <a href="https://www.youtube.com/results?search_query=convenio+169+oit+peru+derechos+indigenas" target="_blank" class="video-link">🌍 Convenio 169 OIT</a>
+                        </div>
+                        <div class="visual-tips">
+                            <strong>💡 Imágenes y recursos visuales clave:</strong><br>
+                            • Fotografías de la protesta en la Curva del Diablo<br>
+                            • Mapas de territorios awajún y wampís<br>
+                            • Imágenes de la represión policial<br>
+                            • Infografías sobre decretos legislativos cuestionados<br>
+                            • Testimonios de líderes indígenas en video<br>
+                            • Material sobre AIDESEP y organizaciones amazónicas<br>
+                            • Comparativas antes/después del conflicto<br>
+                            • Documentación sobre impacto de la minería/petróleo
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Síntesis conclusiva -->
+    <div class="summary-section">
+        <h2>Síntesis Conclusiva</h2>
+        <div class="summary-points">
+            <div class="summary-point">
+                <h3>Hilo histórico coherente</h3>
+                <p>Los cinco eventos forman una secuencia desde la desposesión colonial hasta la gestión contemporánea de conflictos sin consulta, pasando por la naturalización republicana del racismo y episodios de políticas públicas discriminatorias.</p>
+            </div>
+            <div class="summary-point">
+                <h3>Transformaciones necesarias</h3>
+                <p>La inclusión efectiva exige transformaciones epistémicas (reconocer pluralidad de saberes), institucionales (capacidad de implementar consultas interculturales) y reparadoras (memoria, verdad, reparación).</p>
+            </div>
+            <div class="summary-point">
+                <h3>Persistencia de desigualdades</h3>
+                <p>La evidencia empírica muestra que los daños han producido persistencia de desigualdades que hoy necesitan políticas con ambición de largo plazo y enfoque de reparación histórica.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleDetails(button) {
+            const eventContent = button.closest('.event-content');
+            eventContent.classList.toggle('show-details');
+            
+            if (eventContent.classList.contains('show-details')) {
+                button.textContent = 'Ver menos detalles';
+                button.style.background = 'linear-gradient(45deg, #764ba2, #667eea)';
+            } else {
+                button.textContent = 'Ver más detalles';
+                button.style.background = 'linear-gradient(45deg, #667eea, #764ba2)';
+            }
+        }
+
+        // Animación de entrada con intersection observer
+        const timelineEvents = document.querySelectorAll('.timeline-event');
+        
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.animationPlayState = 'running';
+                }
+            });
+        }, observerOptions);
+
+        timelineEvents.forEach(event => {
+            observer.observe(event);
+        });
+
+        // Smooth scrolling para enlaces
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>
