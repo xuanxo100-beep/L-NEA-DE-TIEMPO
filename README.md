@@ -1,1 +1,0 @@
-# L-NEA-DE-TIEMPO
